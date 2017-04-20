@@ -1,9 +1,9 @@
 Technologies:
-a) Node.js
+1. Node.js
     - express
     - socket.io  
-b) Vue.js
-c) Mongodb / Redis
+2. Vue.js
+3. Mongodb / Redis
 
 Todo:
 - save nickname
