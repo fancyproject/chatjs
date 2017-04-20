@@ -11,29 +11,31 @@ var nickname = '';
 
 
 app.use('/assets',express.static('./assets'));
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/login.html');
-});
-
-app.post('/', urlencodedParser, function(req, res){
-  console.log(req.body.nickname);
-  if(req.body.nickname != ""){
-    nickname = req.body.nickname;
-    res.redirect('/chat');
-  }else{
-    res.redirect('/');
-  }
-});
+// app.get('/', function(req, res){
+//   res.sendFile(__dirname + '/login.html');
+// });
+//
+// app.post('/', urlencodedParser, function(req, res){
+//   console.log(req.body.nickname);
+//   if(req.body.nickname != ""){
+//     nickname = req.body.nickname;
+//     res.redirect('/chat');
+//   }else{
+//     res.redirect('/');
+//   }
+// });
 
 app.get('/chat', function(req, res){
-  if(nickname == ''){
-    res.redirect('/');
-  }
+  // if(nickname == ''){
+  //   res.redirect('/');
+  // }
   res.sendFile(__dirname + '/index.html');
 });
 
 io.on('connection', function(socket){
   socket.on('chat message', function(msg){
+    console.log('chat message');
+    console.log(msg);
     io.emit('chat message', msg);
   });
 
