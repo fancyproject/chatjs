@@ -1,62 +1,91 @@
 var socket = io.connect();
 
-Vue.component('chat',{
-    template: `<div>
+Vue.component('chat', {
+  template: `<div id="chat">
         <message-list :messages="messages"></message-list>
-        <message-form @sendMessage="addMessage"></message-form>
+        <notification-list :notifications="notifications"></notification-list>
+        <message-form></message-form>
     </div>`,
-    props: ['messages'],
-    data: function(){
-      return {
-
-      }
-    },
-    methods: {
-        addMessage(txt){
-            // this.messages.push({text: txt});
-        }
-    }
+  props: ['messages', 'notifications'],
 })
 
 Vue.component('message-list', {
-    template: `<ul id="messages">
-      <li v-for='message in messages'>{{ message.text }}</li>
+  template: `<ul id="messages">
+      <li v-for='message in messages'><b>{{ message.username }}</b>: {{ message.text }}</li>
     </ul>`,
-    props: ['messages'],
-
+  props: ['messages'],
+});
+Vue.component('notification-list', {
+  template: `<ul id="notifications">
+      <li v-for='notification in notifications'>{{ notification.text }}</li>
+    </ul>`,
+  props: ['notifications'],
 });
 
 Vue.component('message-form', {
-    template: `
+  template: `
     <form action="">
-      <input v-model="message" placeholder="..." /><a @click="sendMessage">Send</a>
+      <input v-model="message" placeholder="..." @keydown="writingMessage" /><button @click="sendMessage">Send</button>
     </form>`,
 
-    data: function(){
-      return {
-          message: "Test message"
-      }
-    },
-    methods: {
-      sendMessage(){
-          socket.emit('chat message', this.message);
-          this.$emit('sendMessage',this.message);
-          return true;
-      }
+  data: function() {
+    return {
+      message: "",
     }
+  },
+  methods: {
+    sendMessage(event) {
+      event.preventDefault();
+      socket.emit('chat message', this.message);
+      this.message = "";
+      return false;
+    },
+    writingMessage() {
+      socket.emit('chat writing');
+      setTimeout(function() {
+        socket.emit('chat writing stop');
+      }, 1000);
+    }
+  }
 });
 
 var app = new Vue({
   el: '#app',
   data: {
-    messages: [
-      {text:'test'},
-      {text:'test'},
-    ]
+    messages: [],
+    notifications: []
   },
   created: function() {
-      socket.on('chat message', function(data) {
-  			this.messages.push({text: data});
-      }.bind(this));
-    }
+    socket.on('chat message', function(data) {
+      this.messages.push({
+        text: data.text,
+        username: data.username
+      });
+    }.bind(this));
+    socket.on('chat writing', function(data) {
+      var exists = false;
+      for (let i = 0; i < this.notifications.length; i++) {
+        let notification = this.notifications[i];
+        if (notification.username === data.username && notification.type === 'writing') {
+          notification.date = new Date();
+          this.notifications[i] = notification;
+          exists = true;
+          break;
+        }
+      }
+      if (!exists) {
+        this.notifications.push({
+          text: `${data.username} writing...`,
+          username: data.username,
+          type: 'writing',
+          date: new Date()
+        });
+      }
+    }.bind(this));
+    socket.on('chat writing stop', function(data) {
+      this.notifications = this.notifications.filter(function(notification) {
+        return !(notification.username === data.username && notification.type === 'writing');
+      });
+    }.bind(this));
+  }
 });

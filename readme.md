@@ -3,9 +3,7 @@ Technologies:
     - express
     - socket.io  
 2. Vue.js
-3. Mongodb / Redis
 
 Todo:
-- save nickname
-- show status of user (active, inactive, away)
-- Nickname "writing" information
+- Show status of user (active, inactive, away)
+- Storing data in Mongodb/Redis
